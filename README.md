@@ -97,6 +97,6 @@ The project follows a layered architecture:
 | ------------------ | ---------------- |
 | Kaleab Mulugeta    | UGR/7783/16      |
 | Efrata Endalkachew | UGR/2103/16      |
-| Saron Keflu        | UGR/9821/16      |
+| Saron Kiflu        | UGR/9821/16      |
 | Naomi Mesfin       | UGR/8207/16      |
 | Elroi Tesfaye      | UGR/1293/16      |
