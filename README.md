@@ -39,12 +39,8 @@ Customer (User)
 - Update service details  
 - Delete services  
 
-### 2. Service Request Management  
-- Customers can create service requests  
-- Service providers can view requests  
-- Both parties can update or delete requests (based on rules)  
 
-### 3. Reviews & Ratings Management  
+### 2. Reviews & Ratings Management  
 - Customers can create reviews and ratings for services  
 - Users can view reviews  
 - Users can update their own reviews  
@@ -97,10 +93,10 @@ The project follows a layered architecture:
 
 ## Project Members  
 
-| Full Name            | ID (UGR/XXXX/YY) |
+| Full Name          | ID (UGR/XXXX/YY) |
 | ------------------ | ---------------- |
-| Kaleab Mulgeta     | UGR/7783/16      |
+| Kaleab Mulugeta    | UGR/7783/16      |
 | Efrata Endalkachew | UGR/2103/16      |
-| Saron Tesfaye      | UGR/9821/16      |
-| Naomi Name 4       | UGR/8207/16      |
+| Saron Keflu        | UGR/9821/16      |
+| Naomi Mesfin       | UGR/8207/16      |
 | Elroi Tesfaye      | UGR/1293/16      |
