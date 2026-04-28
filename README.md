@@ -2,6 +2,7 @@
 
 ## Overview
 
+
 Tapella is a platform that connects service providers/businesses with users who are looking for services. For example, a plumber, electrician, or salon owner can list their services, while users can browse, request, and manage service bookings.
 
 The project demonstrates authentication, authorization, CRUD operations, layered architecture, and integration with a local REST API.
