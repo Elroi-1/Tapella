@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sqflite/sqflite.dart';
-import '../database/app_database.dart';
+import 'database/app_database.dart';
 
 part 'cache_invalidator.g.dart';
 
