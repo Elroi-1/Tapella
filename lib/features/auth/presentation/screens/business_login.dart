@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tapella/core/widgets/app_scaffold.dart';
 import 'package:tapella/core/widgets/glass_card.dart';
@@ -9,12 +10,46 @@ import 'package:tapella/core/widgets/toggle_pill.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
+import '../providers/auth_provider.dart';
 
-class BusinessLoginScreen extends StatelessWidget {
+class BusinessLoginScreen extends ConsumerStatefulWidget {
   const BusinessLoginScreen({super.key});
 
   @override
+  ConsumerState<BusinessLoginScreen> createState() =>
+      _BusinessLoginScreenState();
+}
+
+class _BusinessLoginScreenState extends ConsumerState<BusinessLoginScreen> {
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    final ok = await ref
+        .read(authProvider.notifier)
+        .login(
+          email: _email.text.trim(),
+          password: _password.text,
+          isProvider: true,
+        );
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(ref.read(authProvider).error ?? 'Login failed')),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final auth = ref.watch(authProvider);
+
     return AppScaffold(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       body: SingleChildScrollView(
@@ -53,43 +88,54 @@ class BusinessLoginScreen extends StatelessWidget {
                     rightLabel: 'Business',
                     selectedIndex: 1,
                     onChanged: (index) {
-                      if (index == 0) {
-                        context.go('/client/login');
-                      }
+                      if (index == 0) context.go('/client/login');
                     },
                   ),
                   const SizedBox(height: 24),
-                  const AppTextField(
+                  AppTextField(
+                    controller: _email,
                     label: 'EMAIL',
                     hintText: 'business@email.com',
                     prefixIcon: Icons.mail_outline,
+                    keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 24),
-                  const AppTextField(
+                  AppTextField(
+                    controller: _password,
                     label: 'PASSWORD',
                     hintText: '••••••••',
                     prefixIcon: Icons.lock_outline,
                     obscureText: true,
                   ),
+                  if (auth.error != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      auth.error!,
+                      style: AppTextStyles.bodySm.copyWith(
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 40),
                   PrimaryButton(
                     width: 277,
                     height: 56,
                     fill: AppColors.primaryBlue,
                     label: 'Login',
-                    onPressed: () => context.go('/business/home'),
+                    onPressed: _login,
+                    isLoading: auth.isSubmitting,
                   ),
                   const SizedBox(height: 16),
                   SecondaryButton(
                     label: 'Sign Up',
-                    onPressed: () => context.go('/business/profile-edit'),
+                    onPressed: () => context.go('/business/signup'),
                   ),
                   const SizedBox(height: 16),
                   Align(
                     alignment: Alignment.center,
                     child: TextButton(
-                      child: const Text("Forgot Password"),
                       onPressed: () => context.go('/business/forgot-password'),
+                      child: const Text('Forgot Password'),
                     ),
                   ),
                 ],

@@ -10,13 +10,13 @@ class MiniTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
 
   const MiniTextField({
-    Key? key,
+    super.key,
     required this.label,
     required this.hintText,
     this.prefixIcon,
     this.controller,
     this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

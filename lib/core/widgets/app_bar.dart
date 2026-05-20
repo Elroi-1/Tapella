@@ -30,7 +30,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Text(title, style: AppTextStyles.appBarTitle),
       leading: IconButton(
         icon: leading,
-        onPressed: onMenuPressed, // or change this
+        onPressed: onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
       ),
       actions: actions,
       bottom: PreferredSize(

@@ -1,23 +1,27 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:tapella/core/widgets/mini_text_field.dart';
+import 'package:tapella/core/widgets/profile_avatar.dart';
 import '../widgets/glass_card.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
-class BusinessReqCard extends StatelessWidget {
+class BusinessReqCard extends StatefulWidget {
   final String name;
+  final String? profileImage;
   final String status;
   final String proffession;
   final DateTime dateTime;
   final String location;
   final String category;
-  final VoidCallback? onComplete;
+  final Function(double?)? onComplete;
   final VoidCallback? onDelete;
+  final double? money;
 
   const BusinessReqCard({
     super.key,
     required this.name,
+    this.profileImage,
     required this.status,
     required this.proffession,
     required this.dateTime,
@@ -25,74 +29,75 @@ class BusinessReqCard extends StatelessWidget {
     required this.category,
     this.onComplete,
     this.onDelete,
+    this.money,
   });
+
+  @override
+  State<BusinessReqCard> createState() => _BusinessReqCardState();
+}
+
+class _BusinessReqCardState extends State<BusinessReqCard> {
+  final TextEditingController _earningsController = TextEditingController();
+
+  @override
+  void dispose() {
+    _earningsController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return GlassCard(
       child: Container(
-        padding: EdgeInsets.all(14),
+        padding: const EdgeInsets.all(14),
         child: Column(
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: AppColors.requestAvatarBackground,
-                  child: Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      CircleAvatar(
-                        radius: 32,
-                        backgroundColor: AppColors.requestAvatarCircle,
-                        child: Icon(
-                          Icons.account_circle,
-                          size: 64,
-                          color: AppColors.requestAvatarIcon,
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    ProfileAvatar(
+                      profileImageBase64: widget.profileImage,
+                      size: 64,
+                    ),
+                    Container(
+                      height: 16,
+                      width: 16,
+                      decoration: BoxDecoration(
+                        color: AppColors.successBright,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.requestBoxDecorationBorder,
+                          width: 2.5,
                         ),
                       ),
-
-                      Container(
-                        height: 16,
-                        width: 16,
-                        decoration: BoxDecoration(
-                          color: AppColors.requestBoxDecorationBackground,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.requestBoxDecorationBorder,
-                            width: 2.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 16),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: AppTextStyles.cardTitle),
+                      Text(widget.name, style: AppTextStyles.cardTitle),
                       const SizedBox(width: 8),
-                      Text("Professional"),
-                      Text(proffession, style: AppTextStyles.cardSub),
+                      const Text("Professional"),
+                      Text(widget.proffession, style: AppTextStyles.cardSub),
                     ],
                   ),
                 ),
                 const SizedBox(width: 16),
-                _statusCheck(status),
+                _statusCheck(widget.status),
               ],
             ),
-
             const SizedBox(height: 24),
-
             Column(
               children: [
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.calendar_today,
                       size: 16,
                       color: AppColors.iconColor,
@@ -100,91 +105,119 @@ class BusinessReqCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _formatDateTime(dateTime),
+                      _formatDateTime(widget.dateTime),
                       style: AppTextStyles.cardSub,
                     ),
                   ],
                 ),
                 const SizedBox(height: 18),
-
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.location_on_outlined,
                       size: 16,
                       color: AppColors.iconColor,
                       weight: 2,
                     ),
                     const SizedBox(width: 8),
-                    Text(location, style: AppTextStyles.cardSub),
+                    Text(widget.location, style: AppTextStyles.cardSub),
                   ],
                 ),
               ],
             ),
-            SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: SizedBox(
-                width: 140,
-                child: const MiniTextField(
-                  label: 'Earnings',
-                  hintText: 'ETB',
-                  prefixIcon: Icons.attach_money_outlined,
+            if (widget.status == 'accepted') ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: SizedBox(
+                  width: 140,
+                  child: MiniTextField(
+                    label: 'Earnings',
+                    hintText: 'ETB',
+                    prefixIcon: Icons.attach_money_outlined,
+                    controller: _earningsController,
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ElevatedButton(
-                    onPressed: () => {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 12,
-                      ),
-                    ),
-                    child: const Text(
-                      "Finish Job",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {},
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.notReady.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppColors.notReady, // outline color
-                          width: 0.5, // thickness
+              Padding(
+                padding: const EdgeInsets.only(top: 18.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        final amount = double.tryParse(
+                          _earningsController.text,
+                        );
+                        widget.onComplete?.call(amount);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 12,
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.delete_outline,
-                            color: AppColors.notReady,
-                            size: 16,
-                            weight: 2,
-                          ),
-                        ],
+                      child: const Text(
+                        "Finish Job",
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
-                  ),
-                ],
+                    InkWell(
+                      onTap: widget.onDelete,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.notReady.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppColors.notReady, // outline color
+                            width: 0.5, // thickness
+                          ),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.delete_outline,
+                              color: AppColors.notReady,
+                              size: 16,
+                              weight: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ] else ...[
+              if (widget.money != null && widget.status == 'completed') ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.attach_money,
+                      size: 18,
+                      color: AppColors.successBright,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Earnings: ETB ${widget.money!.toStringAsFixed(0)}',
+                      style: AppTextStyles.cardSub.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
           ],
         ),
       ),
@@ -197,57 +230,26 @@ String _formatDateTime(DateTime dateTime) {
   return formatter.format(dateTime);
 }
 
-Widget _statusCheck(String status) {
-  if (status == 'accepted') {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.successBright.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.successBright, width: 0.5),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-          color: AppColors.successBright,
-          fontWeight: FontWeight.bold,
-          fontSize: 11,
-        ),
-      ),
-    );
-  } else if (status == 'pending') {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.warning, width: 0.5),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-          color: AppColors.warning,
-          fontWeight: FontWeight.bold,
-          fontSize: 11,
-        ),
-      ),
-    );
-  } else {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.notReady.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.notReady, width: 0.5),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-          color: AppColors.notReady,
-          fontWeight: FontWeight.bold,
-          fontSize: 11,
-        ),
-      ),
-    );
+Color _getStatusColor(String status) {
+  if (status == 'accepted' || status == 'completed') {
+    return AppColors.successBright;
   }
+  if (status == 'pending') return AppColors.warning;
+  return AppColors.notReady;
+}
+
+Widget _statusCheck(String status) {
+  final color = _getStatusColor(status);
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color, width: 0.5),
+    ),
+    child: Text(
+      (status == 'completed' ? 'DONE' : status).toUpperCase(),
+      style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 11),
+    ),
+  );
 }

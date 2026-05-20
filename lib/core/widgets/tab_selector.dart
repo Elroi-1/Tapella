@@ -3,11 +3,13 @@ import 'package:flutter/widgets.dart';
 class TabSelector extends StatefulWidget {
   final String selectedTab;
   final ValueChanged<String> onTabChanged;
+  final List<String> tabs;
 
   const TabSelector({
     super.key,
     required this.selectedTab,
     required this.onTabChanged,
+    this.tabs = const ['All', 'Accepted', 'Pending', 'Rejected', 'Completed'],
   });
 
   @override
@@ -19,14 +21,7 @@ class TabSelector extends StatefulWidget {
 class _TabSelectorState extends State<TabSelector> {
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _buildTab('All'),
-        _buildTab('Accepted'),
-        _buildTab('Pending'),
-        _buildTab('Rejected'),
-      ],
-    );
+    return Row(children: widget.tabs.map((tab) => _buildTab(tab)).toList());
   }
 
   Widget _buildTab(String title) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tapella/core/widgets/profile_avatar.dart';
 import '../widgets/glass_card.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
@@ -6,6 +7,7 @@ import '../theme/app_text_styles.dart';
 
 class NewJob extends StatelessWidget {
   final String name;
+  final String? profileImage;
   final String status;
   final String proffession;
   final DateTime dateTime;
@@ -13,10 +15,13 @@ class NewJob extends StatelessWidget {
   final String category;
   final VoidCallback? onComplete;
   final VoidCallback? onDelete;
+  final VoidCallback? onAccept;
+  final VoidCallback? onReject;
 
   const NewJob({
     super.key,
     required this.name,
+    this.profileImage,
     required this.status,
     required this.proffession,
     required this.dateTime,
@@ -24,6 +29,8 @@ class NewJob extends StatelessWidget {
     required this.category,
     this.onComplete,
     this.onDelete,
+    this.onAccept,
+    this.onReject,
   });
 
   @override
@@ -36,36 +43,23 @@ class NewJob extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: AppColors.requestAvatarBackground,
-                  child: Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      CircleAvatar(
-                        radius: 32,
-                        backgroundColor: AppColors.requestAvatarCircle,
-                        child: Icon(
-                          Icons.account_circle,
-                          size: 64,
-                          color: AppColors.requestAvatarIcon,
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    ProfileAvatar(profileImageBase64: profileImage, size: 64),
+                    Container(
+                      height: 16,
+                      width: 16,
+                      decoration: BoxDecoration(
+                        color: AppColors.successBright,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.requestBoxDecorationBorder,
+                          width: 2.5,
                         ),
                       ),
-
-                      Container(
-                        height: 16,
-                        width: 16,
-                        decoration: BoxDecoration(
-                          color: AppColors.requestBoxDecorationBackground,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.requestBoxDecorationBorder,
-                            width: 2.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 16),
 
@@ -127,7 +121,7 @@ class NewJob extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   ElevatedButton(
-                    onPressed: () => {},
+                    onPressed: onAccept,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryBlue,
                       shape: RoundedRectangleBorder(
@@ -144,7 +138,7 @@ class NewJob extends StatelessWidget {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () => {},
+                    onPressed: onReject,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryBlue,
                       shape: RoundedRectangleBorder(
@@ -175,57 +169,26 @@ String _formatDateTime(DateTime dateTime) {
   return formatter.format(dateTime);
 }
 
-Widget _statusCheck(String status) {
-  if (status == 'accepted') {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.successBright.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.successBright, width: 0.5),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-          color: AppColors.successBright,
-          fontWeight: FontWeight.bold,
-          fontSize: 11,
-        ),
-      ),
-    );
-  } else if (status == 'pending') {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.warning, width: 0.5),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-          color: AppColors.warning,
-          fontWeight: FontWeight.bold,
-          fontSize: 11,
-        ),
-      ),
-    );
-  } else {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.notReady.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.notReady, width: 0.5),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-          color: AppColors.notReady,
-          fontWeight: FontWeight.bold,
-          fontSize: 11,
-        ),
-      ),
-    );
+Color _getStatusColor(String status) {
+  if (status == 'accepted' || status == 'completed') {
+    return AppColors.successBright;
   }
+  if (status == 'pending') return AppColors.warning;
+  return AppColors.notReady;
+}
+
+Widget _statusCheck(String status) {
+  final color = _getStatusColor(status);
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color, width: 0.5),
+    ),
+    child: Text(
+      (status == 'completed' ? 'DONE' : status).toUpperCase(),
+      style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 11),
+    ),
+  );
 }

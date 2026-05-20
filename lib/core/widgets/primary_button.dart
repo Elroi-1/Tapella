@@ -12,6 +12,7 @@ class PrimaryButton extends StatelessWidget {
   final bool border;
   final Color fill;
   final Color? borderColor;
+  final bool isLoading;
 
   const PrimaryButton({
     super.key,
@@ -24,6 +25,7 @@ class PrimaryButton extends StatelessWidget {
     this.onPressed,
     this.icon,
     this.expand = true,
+    this.isLoading = false,
   });
 
   @override
@@ -45,21 +47,21 @@ class PrimaryButton extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: onPressed,
+            onTap: isLoading ? null : onPressed,
             customBorder: const StadiumBorder(),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
               child: Center(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: SizedBox(
-                    child: Row(
-                      key: const ValueKey('content'),
-                      mainAxisSize: MainAxisSize.min,
-                      children: [Text(label, style: AppTextStyles.button)],
-                    ),
-                  ),
-                ),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(label, style: AppTextStyles.button),
               ),
             ),
           ),
