@@ -12,10 +12,6 @@ class AppDatabase {
 
   static Future<Database> instance() async {
     if (kIsWeb) {
-      // Return a mock database or handle web gracefully
-      // For now, we allow the app to continue without throwing,
-      // but warn that actual SQLite operations will fail.
-      // Better strategy: Use higher-level fallback/repos.
       return _stubDatabase();
     }
     if (_db != null) return _db!;
