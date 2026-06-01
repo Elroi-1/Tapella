@@ -1,3 +1,5 @@
+import '../../features/services/domain/entities/listing_entity.dart';
+
 const List<String> appCategories = [
   'Plumbing',
   'Cleaning',
@@ -12,33 +14,20 @@ const List<String> appCategories = [
   'Other'
 ];
 
-class ListingModel {
-  final String id;
-  final String providerId;
-  final String providerName;
-  final String? providerPhoto;
-  final String title;
-  final String description;
-  final String category;
-  final double priceEtb;
-  final String location;
-  final String phone;
-  final double ratingAvg;
-  final int reviewCount;
-
+class ListingModel extends ListingEntity {
   const ListingModel({
-    required this.id,
-    required this.providerId,
-    required this.providerName,
-    this.providerPhoto,
-    required this.title,
-    required this.description,
-    required this.category,
-    required this.priceEtb,
-    required this.location,
-    required this.phone,
-    required this.ratingAvg,
-    required this.reviewCount,
+    required super.id,
+    required super.providerId,
+    required super.providerName,
+    super.providerPhoto,
+    required super.title,
+    required super.description,
+    required super.category,
+    required super.priceEtb,
+    required super.location,
+    required super.phone,
+    required super.ratingAvg,
+    required super.reviewCount,
   });
 
   factory ListingModel.fromJson(Map<String, dynamic> json) {

@@ -1,22 +1,15 @@
-class ReviewModel {
-  final String id;
-  final String bookingId;
-  final String listingId;
-  final String customerId;
-  final String customerName;
-  final String? customerPhoto;
-  final int rating;
-  final String comment;
+import '../../features/reviews/domain/entities/review_entity.dart';
 
+class ReviewModel extends ReviewEntity {
   const ReviewModel({
-    required this.id,
-    required this.bookingId,
-    required this.listingId,
-    required this.customerId,
-    required this.customerName,
-    this.customerPhoto,
-    required this.rating,
-    this.comment = '',
+    required super.id,
+    required super.bookingId,
+    required super.listingId,
+    required super.customerId,
+    required super.customerName,
+    super.customerPhoto,
+    required super.rating,
+    super.comment = '',
   });
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {

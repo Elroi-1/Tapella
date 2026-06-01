@@ -1,24 +1,16 @@
-class UserModel {
-  final String id;
-  final String email;
-  final String role;
-  final String displayName;
-  final String? phone;
-  final String? location;
-  final String? bio;
-  final String? profileImage;
-  final String? profession;
+import '../../features/auth/domain/entities/user_entity.dart';
 
+class UserModel extends UserEntity {
   const UserModel({
-    required this.id,
-    required this.email,
-    required this.role,
-    required this.displayName,
-    this.phone,
-    this.location,
-    this.bio,
-    this.profileImage,
-    this.profession,
+    required super.id,
+    required super.email,
+    required super.role,
+    required super.displayName,
+    super.phone,
+    super.location,
+    super.bio,
+    super.profileImage,
+    super.profession,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -68,9 +60,4 @@ class UserModel {
       profession: profession ?? this.profession,
     );
   }
-
-  bool get isCustomer => role == 'customer';
-  bool get isProvider => role == 'provider';
-
-  String get roleLabel => isProvider ? 'SERVICE PROVIDER' : 'PREMIUM MEMBER';
 }

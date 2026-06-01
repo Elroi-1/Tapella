@@ -37,7 +37,7 @@ class GlassCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
               ),
-              child: child,
+              child: Material(type: MaterialType.transparency, child: child),
             ),
           ),
         ),

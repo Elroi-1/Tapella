@@ -51,7 +51,7 @@ class NewJob extends StatelessWidget {
                       height: 16,
                       width: 16,
                       decoration: BoxDecoration(
-                        color: AppColors.successBright,
+                        color: _getStatusColor(status),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: AppColors.requestBoxDecorationBorder,

@@ -66,7 +66,7 @@ class _BusinessReqCardState extends State<BusinessReqCard> {
                       height: 16,
                       width: 16,
                       decoration: BoxDecoration(
-                        color: AppColors.successBright,
+                        color: _getStatusColor(widget.status),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: AppColors.requestBoxDecorationBorder,

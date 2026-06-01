@@ -36,6 +36,7 @@ class SecondaryButton extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
+            splashFactory: InkRipple.splashFactory,
             onTap: onPressed,
             customBorder: const StadiumBorder(),
             child: Padding(

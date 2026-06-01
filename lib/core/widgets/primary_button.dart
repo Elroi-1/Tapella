@@ -47,6 +47,7 @@ class PrimaryButton extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
+            splashFactory: InkRipple.splashFactory,
             onTap: isLoading ? null : onPressed,
             customBorder: const StadiumBorder(),
             child: Padding(

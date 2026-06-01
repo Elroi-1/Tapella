@@ -1,32 +1,20 @@
-class BookingModel {
-  final String id;
-  final String listingId;
-  final String listingTitle;
-  final String customerId;
-  final String customerName;
-  final String? customerPhoto;
-  final String providerId;
-  final String providerName;
-  final String? providerPhoto;
-  final String status;
-  final String? scheduledDate;
-  final String notes;
-  final double amountEtb;
+import '../../features/bookings/domain/entities/booking_entity.dart';
 
+class BookingModel extends BookingEntity {
   const BookingModel({
-    required this.id,
-    required this.listingId,
-    required this.listingTitle,
-    required this.customerId,
-    required this.customerName,
-    this.customerPhoto,
-    required this.providerId,
-    required this.providerName,
-    this.providerPhoto,
-    required this.status,
-    this.scheduledDate,
-    this.notes = '',
-    this.amountEtb = 0,
+    required super.id,
+    required super.listingId,
+    required super.listingTitle,
+    required super.customerId,
+    required super.customerName,
+    super.customerPhoto,
+    required super.providerId,
+    required super.providerName,
+    super.providerPhoto,
+    required super.status,
+    super.scheduledDate,
+    super.notes = '',
+    super.amountEtb = 0,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
