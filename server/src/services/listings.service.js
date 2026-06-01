@@ -1,12 +1,12 @@
-const { prisma } = require('../db/database');
-const { AppError } = require('../middleware/errorHandler');
+const { prisma } = require("../db/database");
+const { AppError } = require("../middleware/errorHandler");
 
 function mapListing(listing) {
   if (!listing) return null;
   return {
     id: listing.id,
     providerId: listing.providerId,
-    providerName: listing.provider?.displayName || 'Provider',
+    providerName: listing.provider?.displayName || "Provider",
     providerPhoto: listing.provider?.profileImage || null,
     title: listing.title,
     description: listing.description,
@@ -42,13 +42,10 @@ async function listPublic({ search, category }) {
     where,
     include: {
       provider: {
-        select: { displayName: true, profileImage: true }
-      }
+        select: { displayName: true, profileImage: true },
+      },
     },
-    orderBy: [
-      { ratingAvg: 'desc' },
-      { createdAt: 'desc' }
-    ]
+    orderBy: [{ ratingAvg: "desc" }, { createdAt: "desc" }],
   });
 
   return listings.map(mapListing);
@@ -59,13 +56,13 @@ async function getById(id) {
     where: { id },
     include: {
       provider: {
-        select: { displayName: true, profileImage: true }
-      }
-    }
+        select: { displayName: true, profileImage: true },
+      },
+    },
   });
 
   if (!listing || listing.deletedAt) {
-    throw new AppError('Listing not found', 404, 'NOT_FOUND');
+    throw new AppError("Listing not found", 404, "NOT_FOUND");
   }
 
   return mapListing(listing);
@@ -75,14 +72,14 @@ async function listMine(providerId) {
   const listings = await prisma.listing.findMany({
     where: {
       providerId,
-      deletedAt: null
+      deletedAt: null,
     },
     include: {
       provider: {
-        select: { displayName: true, profileImage: true }
-      }
+        select: { displayName: true, profileImage: true },
+      },
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: "desc" },
   });
 
   return listings.map(mapListing);
@@ -93,17 +90,17 @@ async function create(providerId, body) {
     data: {
       providerId,
       title: body.title,
-      description: body.description || '',
+      description: body.description || "",
       category: body.category,
       priceEtb: body.priceEtb || 0,
-      location: body.location || '',
-      phone: body.phone || '',
+      location: body.location || "",
+      phone: body.phone || "",
     },
     include: {
       provider: {
-        select: { displayName: true, profileImage: true }
-      }
-    }
+        select: { displayName: true, profileImage: true },
+      },
+    },
   });
 
   return mapListing(listing);
@@ -112,7 +109,7 @@ async function create(providerId, body) {
 async function update(id, body) {
   const existing = await prisma.listing.findUnique({ where: { id } });
   if (!existing || existing.deletedAt) {
-    throw new AppError('Listing not found', 404, 'NOT_FOUND');
+    throw new AppError("Listing not found", 404, "NOT_FOUND");
   }
 
   const listing = await prisma.listing.update({
@@ -127,18 +124,17 @@ async function update(id, body) {
     },
     include: {
       provider: {
-        select: { displayName: true, profileImage: true }
-      }
-    }
+        select: { displayName: true, profileImage: true },
+      },
+    },
   });
 
   return mapListing(listing);
 }
 
 async function remove(id) {
-  await prisma.listing.update({
+  await prisma.listing.delete({
     where: { id },
-    data: { deletedAt: new Date() }
   });
   return { deleted: true };
 }
@@ -147,7 +143,7 @@ async function recalculateRating(listingId) {
   const aggregates = await prisma.review.aggregate({
     where: { listingId },
     _avg: { rating: true },
-    _count: { _all: true }
+    _count: { _all: true },
   });
 
   await prisma.listing.update({
@@ -155,7 +151,7 @@ async function recalculateRating(listingId) {
     data: {
       ratingAvg: aggregates._avg.rating || 0,
       reviewCount: aggregates._count._all || 0,
-    }
+    },
   });
 }
 

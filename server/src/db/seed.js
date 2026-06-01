@@ -1,53 +1,53 @@
-const bcrypt = require('bcryptjs');
-const { prisma } = require('./database');
+const bcrypt = require("bcryptjs");
+const { prisma } = require("./database");
 
 async function seedIfEmpty() {
   const count = await prisma.user.count();
   if (count > 0) return;
 
-  const hash = await bcrypt.hash('password123', 10);
+  const hash = await bcrypt.hash("password123", 10);
 
   const provider = await prisma.user.create({
     data: {
-      email: 'provider@tapella.com',
+      email: "provider@tapella.com",
       passwordHash: hash,
-      role: 'provider',
-      displayName: 'Saron Kiflu',
-      phone: '0911000001',
+      role: "provider",
+      displayName: "Saron Kiflu",
+      phone: "0911000001",
     },
   });
 
   const customer = await prisma.user.create({
     data: {
-      email: 'customer@tapella.com',
+      email: "customer@tapella.com",
       passwordHash: hash,
-      role: 'customer',
-      displayName: 'Naomi M',
-      phone: '0911000002',
+      role: "customer",
+      displayName: "Naomi M",
+      phone: "0911000002",
     },
   });
 
   const listings = [
     {
-      title: 'Master Plumber',
-      description: 'Master of pipes, pressure, and precision',
-      category: 'Plumbing',
+      title: "Master Plumber",
+      description: "Master of pipes, pressure, and precision",
+      category: "Plumbing",
       priceEtb: 500,
-      location: 'Megenagna',
+      location: "Megenagna",
     },
     {
-      title: 'Premium Housekeeping',
-      description: 'Reliable cleaning, laundry, and home organization',
-      category: 'Cleaning',
+      title: "Housekeeping",
+      description: "Reliable cleaning, laundry, and home organization",
+      category: "Cleaning",
       priceEtb: 350,
-      location: 'Bole',
+      location: "Bole",
     },
     {
-      title: 'Web Development',
-      description: 'Website developer, maintainer, and tech specialist',
-      category: 'Development',
+      title: "Web Development",
+      description: "Website developer, maintainer, and tech specialist",
+      category: "Development",
       priceEtb: 1200,
-      location: 'Mexico',
+      location: "Mexico",
     },
   ];
 
@@ -60,14 +60,36 @@ async function seedIfEmpty() {
         category: l.category,
         priceEtb: l.priceEtb,
         location: l.location,
-        phone: '0911000001',
+        phone: "0911000001",
         ratingAvg: 4.8,
         reviewCount: 12,
       },
     });
   }
 
-  console.log('Seeded demo users: provider@tapella.com / customer@tapella.com (password123)');
+  console.log(
+    "Seeded demo users: provider@tapella.com / customer@tapella.com (password123)",
+  );
 }
 
 module.exports = { seedIfEmpty };
+
+if (require.main === module) {
+  const { initDatabase } = require("./database");
+
+  (async () => {
+    try {
+      await initDatabase();
+      await seedIfEmpty();
+      await prisma.$disconnect();
+    } catch (error) {
+      console.error("Failed to seed database", error);
+      try {
+        await prisma.$disconnect();
+      } catch (_) {
+        // Ignore disconnect errors during shutdown.
+      }
+      process.exit(1);
+    }
+  })();
+}
