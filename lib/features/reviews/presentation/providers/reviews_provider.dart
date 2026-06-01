@@ -1,12 +1,23 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../../core/models/review_model.dart';
+import '../../domain/entities/review_entity.dart';
+import '../../domain/usecases/reviews_usecases.dart';
 import '../../data/reviews_repository.dart';
 
 part 'reviews_provider.g.dart';
 
 @riverpod
-Future<List<ReviewModel>> listingReviews(Ref ref, String listingId) {
-  return ref.read(reviewsRepositoryProvider).getByListing(listingId);
+GetReviewsByListingUseCase getReviewsByListingUseCase(Ref ref) {
+  return GetReviewsByListingUseCase(ref.watch(reviewsRepositoryProvider));
+}
+
+@riverpod
+SubmitReviewUseCase submitReviewUseCase(Ref ref) {
+  return SubmitReviewUseCase(ref.watch(reviewsRepositoryProvider));
+}
+
+@riverpod
+Future<List<ReviewEntity>> listingReviews(Ref ref, String listingId) {
+  return ref.read(getReviewsByListingUseCaseProvider).call(listingId);
 }
 
 @Riverpod(keepAlive: true)
@@ -22,7 +33,7 @@ class SubmitReviewActions {
     String? comment,
   }) async {
     await ref
-        .read(reviewsRepositoryProvider)
-        .submit(bookingId: bookingId, rating: rating, comment: comment);
+        .read(submitReviewUseCaseProvider)
+        .call(bookingId: bookingId, rating: rating, comment: comment);
   }
 }

@@ -26,7 +26,7 @@ class SavedJobsScreen extends ConsumerWidget {
       extendBody: true,
       appBar: CustomAppBar(
         title: 'SAVED SERVICES',
-        onMenuPressed: () => context.pop(),
+        onMenuPressed: () => context.go('/client/profile'),
         leading: const Icon(Icons.arrow_back, color: Colors.white),
       ),
       body: SingleChildScrollView(

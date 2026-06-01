@@ -3,48 +3,46 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../../core/cache/cache_invalidator.dart';
 import '../../../core/connectivity/connectivity_service.dart';
-import '../../../core/data/cache_result.dart';
+import '../../../core/domain/cache_result.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/exceptions/api_exception.dart';
 import '../../../core/models/booking_model.dart';
 import '../../../core/network/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../domain/repositories/bookings_repository.dart';
+import 'datasources/remote/bookings_remote_datasource.dart';
 
 part 'bookings_repository.g.dart';
 
 @riverpod
 BookingsRepository bookingsRepository(Ref ref) {
   return BookingsRepository(
-    ref.watch(dioProvider),
+    BookingsRemoteDataSource(ref.watch(dioProvider)),
     ref.watch(cacheInvalidatorProvider),
     ref.watch(connectivityServiceProvider),
   );
 }
 
-class BookingsRepository {
-  final Dio _dio;
+class BookingsRepository implements BookingsRepositoryContract {
+  final BookingsRemoteDataSource _remote;
   final CacheInvalidator _invalidator;
   final ConnectivityService _connectivity;
 
-  BookingsRepository(this._dio, this._invalidator, this._connectivity);
+  BookingsRepository(this._remote, this._invalidator, this._connectivity);
 
+  @override
   Future<BookingModel> create({
     required String listingId,
     String? scheduledDate,
     String? notes,
   }) async {
     try {
-      final res = await _dio.post(
-        ApiConstants.bookings,
-        data: {
-          'listingId': listingId,
-          'scheduledDate': ?scheduledDate,
-          'notes': ?notes,
-        },
+      final data = await _remote.createBooking(
+        listingId: listingId,
+        scheduledDate: scheduledDate,
+        notes: notes,
       );
-      final booking = BookingModel.fromJson(
-        res.data['data'] as Map<String, dynamic>,
-      );
+      final booking = BookingModel.fromJson(data);
       if (isLocalDatabaseSupported) {
         await _invalidator.invalidateBookings();
       }
@@ -54,14 +52,17 @@ class BookingsRepository {
     }
   }
 
+  @override
   Future<CacheResult<List<BookingModel>>> customerBookings() async {
     return _fetchList('${ApiConstants.bookings}/mine');
   }
 
+  @override
   Future<CacheResult<List<BookingModel>>> incomingBookings() async {
     return _fetchList('${ApiConstants.bookings}/incoming');
   }
 
+  @override
   Future<CacheResult<List<BookingModel>>> historyBookings() async {
     return _fetchList('${ApiConstants.bookings}/history');
   }
@@ -69,8 +70,8 @@ class BookingsRepository {
   Future<CacheResult<List<BookingModel>>> _fetchList(String path) async {
     if (!isLocalDatabaseSupported) {
       try {
-        final res = await _dio.get(path);
-        return CacheResult(data: _parseList(res.data['data']));
+        final data = await _remote.fetchBookingsList(path);
+        return CacheResult(data: _parseList(data));
       } on DioException catch (e) {
         throw ApiExceptionMapper.fromDio(e);
       }
@@ -88,8 +89,8 @@ class BookingsRepository {
       );
     }
     try {
-      final res = await _dio.get(path);
-      final list = _parseList(res.data['data']);
+      final data = await _remote.fetchBookingsList(path);
+      final list = _parseList(data);
       await _saveAll(list);
       return CacheResult(data: list);
     } on DioException catch (e) {
@@ -132,15 +133,11 @@ class BookingsRepository {
     }
   }
 
+  @override
   Future<BookingModel> updateStatus(String id, String status) async {
     try {
-      final res = await _dio.patch(
-        '${ApiConstants.bookings}/$id/status',
-        data: {'status': status},
-      );
-      final booking = BookingModel.fromJson(
-        res.data['data'] as Map<String, dynamic>,
-      );
+      final data = await _remote.updateBookingStatus(id, status);
+      final booking = BookingModel.fromJson(data);
       if (isLocalDatabaseSupported) {
         await _invalidator.invalidateBookings();
       }
@@ -150,15 +147,11 @@ class BookingsRepository {
     }
   }
 
+  @override
   Future<BookingModel> complete(String id, {double? amount}) async {
     try {
-      final res = await _dio.patch(
-        '${ApiConstants.bookings}/$id/complete',
-        data: amount != null ? {'amountEtb': amount} : null,
-      );
-      final booking = BookingModel.fromJson(
-        res.data['data'] as Map<String, dynamic>,
-      );
+      final data = await _remote.completeBooking(id, amount: amount);
+      final booking = BookingModel.fromJson(data);
       if (isLocalDatabaseSupported) {
         await _invalidator.invalidateBookings();
       }
@@ -168,12 +161,11 @@ class BookingsRepository {
     }
   }
 
+  @override
   Future<BookingModel> cancel(String id) async {
     try {
-      final res = await _dio.patch('${ApiConstants.bookings}/$id/cancel');
-      final booking = BookingModel.fromJson(
-        res.data['data'] as Map<String, dynamic>,
-      );
+      final data = await _remote.cancelBooking(id);
+      final booking = BookingModel.fromJson(data);
       if (isLocalDatabaseSupported) {
         await _invalidator.invalidateBookings();
       }

@@ -5,34 +5,32 @@ import '../../../core/cache/cache_invalidator.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/exceptions/api_exception.dart';
 import '../../../core/models/review_model.dart';
-import '../../../core/network/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../domain/repositories/reviews_repository.dart';
+import 'datasources/remote/reviews_remote_datasource.dart';
 
 part 'reviews_repository.g.dart';
 
 @riverpod
 ReviewsRepository reviewsRepository(Ref ref) {
   return ReviewsRepository(
-    ref.watch(dioProvider),
+    ReviewsRemoteDataSource(ref.watch(dioProvider)),
     ref.watch(cacheInvalidatorProvider),
   );
 }
 
-class ReviewsRepository {
-  final Dio _dio;
+class ReviewsRepository implements ReviewsRepositoryContract {
+  final ReviewsRemoteDataSource _remote;
   final CacheInvalidator _invalidator;
 
-  ReviewsRepository(this._dio, this._invalidator);
+  ReviewsRepository(this._remote, this._invalidator);
 
+  @override
   Future<List<ReviewModel>> getByListing(String listingId) async {
     if (!isLocalDatabaseSupported) {
       try {
-        final res = await _dio.get(
-          '${ApiConstants.reviews}/listings/$listingId',
-        );
-        return (res.data['data'] as List)
-            .map((e) => ReviewModel.fromJson(e as Map<String, dynamic>))
-            .toList();
+        final data = await _remote.fetchReviewsByListing(listingId);
+        return data.map((e) => ReviewModel.fromJson(e as Map<String, dynamic>)).toList();
       } on DioException catch (e) {
         throw ApiExceptionMapper.fromDio(e);
       }
@@ -45,10 +43,8 @@ class ReviewsRepository {
       whereArgs: [listingId],
     );
     try {
-      final res = await _dio.get('${ApiConstants.reviews}/listings/$listingId');
-      final list = (res.data['data'] as List)
-          .map((e) => ReviewModel.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final data = await _remote.fetchReviewsByListing(listingId);
+      final list = data.map((e) => ReviewModel.fromJson(e as Map<String, dynamic>)).toList();
       await db.delete(
         'reviews',
         where: 'listing_id = ?',
@@ -70,19 +66,19 @@ class ReviewsRepository {
     }
   }
 
+  @override
   Future<ReviewModel> submit({
     required String bookingId,
     required int rating,
     String? comment,
   }) async {
     try {
-      final res = await _dio.post(
-        '${ApiConstants.reviews}/bookings/$bookingId',
-        data: {'rating': rating, 'comment': ?comment},
+      final data = await _remote.submitReview(
+        bookingId: bookingId,
+        rating: rating,
+        comment: comment,
       );
-      final review = ReviewModel.fromJson(
-        res.data['data'] as Map<String, dynamic>,
-      );
+      final review = ReviewModel.fromJson(data);
       if (isLocalDatabaseSupported) {
         await _invalidator.invalidateListing(review.listingId);
         await _invalidator.invalidateReviewsForListing(review.listingId);

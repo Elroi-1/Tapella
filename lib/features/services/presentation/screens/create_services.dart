@@ -68,12 +68,20 @@ class _CreateServiceBodyState extends ConsumerState<CreateServiceBody> {
     }
   }
 
+  void _handleBack() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go('/business/profile');
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
       extendBody: true,
       appBar: CustomAppBar(
-        onMenuPressed: () => context.pop(),
+        onMenuPressed: _handleBack,
         leading: const Icon(Icons.arrow_back, color: Color(0xFFADC6FF)),
         title: 'Create New Service',
       ),

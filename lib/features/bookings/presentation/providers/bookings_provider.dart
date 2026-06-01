@@ -1,17 +1,53 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../../core/models/booking_model.dart';
+import '../../domain/entities/booking_entity.dart';
+import '../../domain/usecases/bookings_usecases.dart';
 import '../../data/bookings_repository.dart';
 import '../../../services/presentation/providers/listings_provider.dart';
 
 part 'bookings_provider.g.dart';
+
+@riverpod
+CreateBookingUseCase createBookingUseCase(Ref ref) {
+  return CreateBookingUseCase(ref.watch(bookingsRepositoryProvider));
+}
+
+@riverpod
+GetCustomerBookingsUseCase getCustomerBookingsUseCase(Ref ref) {
+  return GetCustomerBookingsUseCase(ref.watch(bookingsRepositoryProvider));
+}
+
+@riverpod
+GetIncomingBookingsUseCase getIncomingBookingsUseCase(Ref ref) {
+  return GetIncomingBookingsUseCase(ref.watch(bookingsRepositoryProvider));
+}
+
+@riverpod
+GetHistoryBookingsUseCase getHistoryBookingsUseCase(Ref ref) {
+  return GetHistoryBookingsUseCase(ref.watch(bookingsRepositoryProvider));
+}
+
+@riverpod
+UpdateBookingStatusUseCase updateBookingStatusUseCase(Ref ref) {
+  return UpdateBookingStatusUseCase(ref.watch(bookingsRepositoryProvider));
+}
+
+@riverpod
+CompleteBookingUseCase completeBookingUseCase(Ref ref) {
+  return CompleteBookingUseCase(ref.watch(bookingsRepositoryProvider));
+}
+
+@riverpod
+CancelBookingUseCase cancelBookingUseCase(Ref ref) {
+  return CancelBookingUseCase(ref.watch(bookingsRepositoryProvider));
+}
 
 class ProviderStats {
   final int totalJobs;
   final int completedJobs;
   final double totalEarnings;
   final double averageRating;
-  final List<BookingModel> pendingBookings;
-  final List<BookingModel> completedBookings;
+  final List<BookingEntity> pendingBookings;
+  final List<BookingEntity> completedBookings;
 
   const ProviderStats({
     required this.totalJobs,
@@ -68,26 +104,26 @@ Future<ProviderStats> providerStats(Ref ref) async {
 }
 
 @riverpod
-Future<List<BookingModel>> customerBookings(Ref ref) async {
-  final result = await ref.read(bookingsRepositoryProvider).customerBookings();
+Future<List<BookingEntity>> customerBookings(Ref ref) async {
+  final result = await ref.read(getCustomerBookingsUseCaseProvider).call();
   return result.data;
 }
 
 @riverpod
 Future<bool> customerBookingsStale(Ref ref) async {
-  final result = await ref.read(bookingsRepositoryProvider).customerBookings();
+  final result = await ref.read(getCustomerBookingsUseCaseProvider).call();
   return result.isStale;
 }
 
 @riverpod
-Future<List<BookingModel>> incomingBookings(Ref ref) async {
-  final result = await ref.read(bookingsRepositoryProvider).incomingBookings();
+Future<List<BookingEntity>> incomingBookings(Ref ref) async {
+  final result = await ref.read(getIncomingBookingsUseCaseProvider).call();
   return result.data;
 }
 
 @riverpod
-Future<List<BookingModel>> historyBookings(Ref ref) async {
-  final result = await ref.read(bookingsRepositoryProvider).historyBookings();
+Future<List<BookingEntity>> historyBookings(Ref ref) async {
+  final result = await ref.read(getHistoryBookingsUseCaseProvider).call();
   return result.data;
 }
 
@@ -99,36 +135,36 @@ class BookingActions {
   BookingActions(this.ref);
 
   Future<void> accept(String id) async {
-    await ref.read(bookingsRepositoryProvider).updateStatus(id, 'accepted');
+    await ref.read(updateBookingStatusUseCaseProvider).call(id, 'accepted');
     ref.invalidate(incomingBookingsProvider);
     ref.invalidate(historyBookingsProvider);
   }
 
   Future<void> reject(String id) async {
-    await ref.read(bookingsRepositoryProvider).updateStatus(id, 'rejected');
+    await ref.read(updateBookingStatusUseCaseProvider).call(id, 'rejected');
     ref.invalidate(incomingBookingsProvider);
     ref.invalidate(historyBookingsProvider);
   }
 
   Future<void> complete(String id, {double? amount}) async {
-    await ref.read(bookingsRepositoryProvider).complete(id, amount: amount);
+    await ref.read(completeBookingUseCaseProvider).call(id, amount: amount);
     ref.invalidate(incomingBookingsProvider);
     ref.invalidate(historyBookingsProvider);
   }
 
   Future<void> cancel(String id) async {
-    await ref.read(bookingsRepositoryProvider).cancel(id);
+    await ref.read(cancelBookingUseCaseProvider).call(id);
     ref.invalidate(customerBookingsProvider);
   }
 
-  Future<BookingModel> book({
+  Future<BookingEntity> book({
     required String listingId,
     String? scheduledDate,
     String? notes,
   }) async {
     final booking = await ref
-        .read(bookingsRepositoryProvider)
-        .create(
+        .read(createBookingUseCaseProvider)
+        .call(
           listingId: listingId,
           scheduledDate: scheduledDate,
           notes: notes,

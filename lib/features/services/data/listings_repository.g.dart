@@ -55,4 +55,4 @@ final class ListingsRepositoryProvider
 }
 
 String _$listingsRepositoryHash() =>
-    r'7152cc3e130acfdf02ed474ec653a6bdcf3ccdef';
+    r'a559aa0e46d27205bec7a61c69feb46139a0bcc0';

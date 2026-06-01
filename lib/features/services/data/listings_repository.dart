@@ -3,31 +3,33 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../../core/cache/cache_invalidator.dart';
 import '../../../core/connectivity/connectivity_service.dart';
-import '../../../core/data/cache_result.dart';
+import '../../../core/domain/cache_result.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/exceptions/api_exception.dart';
 import '../../../core/models/listing_model.dart';
-import '../../../core/network/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../domain/repositories/listings_repository.dart';
+import 'datasources/remote/listings_remote_datasource.dart';
 
 part 'listings_repository.g.dart';
 
 @riverpod
 ListingsRepository listingsRepository(Ref ref) {
   return ListingsRepository(
-    ref.watch(dioProvider),
+    ListingsRemoteDataSource(ref.watch(dioProvider)),
     ref.watch(cacheInvalidatorProvider),
     ref.watch(connectivityServiceProvider),
   );
 }
 
-class ListingsRepository {
-  final Dio _dio;
+class ListingsRepository implements ListingsRepositoryContract {
+  final ListingsRemoteDataSource _remote;
   final CacheInvalidator _invalidator;
   final ConnectivityService _connectivity;
 
-  ListingsRepository(this._dio, this._invalidator, this._connectivity);
+  ListingsRepository(this._remote, this._invalidator, this._connectivity);
 
+  @override
   Future<CacheResult<List<ListingModel>>> getListings({
     String? search,
     String? category,
@@ -51,16 +53,8 @@ class ListingsRepository {
     String? category,
   }) async {
     try {
-      final res = await _dio.get(
-        ApiConstants.listings,
-        queryParameters: {
-          if (search != null && search.isNotEmpty) 'search': search,
-          if (category != null && category.isNotEmpty) 'category': category,
-        },
-      );
-      final list = (res.data['data'] as List)
-          .map((e) => ListingModel.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final data = await _remote.fetchListings(search: search, category: category);
+      final list = data.map((e) => ListingModel.fromJson(e as Map<String, dynamic>)).toList();
       return CacheResult(data: list);
     } on DioException catch (e) {
       throw ApiExceptionMapper.fromDio(e);
@@ -79,16 +73,8 @@ class ListingsRepository {
     String? category,
   }) async {
     try {
-      final res = await _dio.get(
-        ApiConstants.listings,
-        queryParameters: {
-          if (search != null && search.isNotEmpty) 'search': search,
-          if (category != null && category.isNotEmpty) 'category': category,
-        },
-      );
-      final list = (res.data['data'] as List)
-          .map((e) => ListingModel.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final data = await _remote.fetchListings(search: search, category: category);
+      final list = data.map((e) => ListingModel.fromJson(e as Map<String, dynamic>)).toList();
       await _saveListings(list);
       return CacheResult(data: list);
     } on DioException catch (e) {
@@ -106,6 +92,7 @@ class ListingsRepository {
     }
   }
 
+  @override
   Future<CacheResult<ListingModel>> getById(String id) async {
     if (!isLocalDatabaseSupported) {
       return _fetchOne(id);
@@ -132,10 +119,8 @@ class ListingsRepository {
 
   Future<CacheResult<ListingModel>> _fetchOne(String id) async {
     try {
-      final res = await _dio.get('${ApiConstants.listings}/$id');
-      final item = ListingModel.fromJson(
-        res.data['data'] as Map<String, dynamic>,
-      );
+      final data = await _remote.fetchListingById(id);
+      final item = ListingModel.fromJson(data);
       if (isLocalDatabaseSupported) {
         final db = await AppDatabase.instance();
         await db.insert(
@@ -150,12 +135,11 @@ class ListingsRepository {
     }
   }
 
+  @override
   Future<List<ListingModel>> getMyListings() async {
     try {
-      final res = await _dio.get('${ApiConstants.listings}/mine');
-      final list = (res.data['data'] as List)
-          .map((e) => ListingModel.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final data = await _remote.fetchMyListings();
+      final list = data.map((e) => ListingModel.fromJson(e as Map<String, dynamic>)).toList();
       await _saveListings(list);
       return list;
     } on DioException catch (e) {
@@ -163,12 +147,11 @@ class ListingsRepository {
     }
   }
 
+  @override
   Future<ListingModel> create(Map<String, dynamic> body) async {
     try {
-      final res = await _dio.post(ApiConstants.listings, data: body);
-      final item = ListingModel.fromJson(
-        res.data['data'] as Map<String, dynamic>,
-      );
+      final data = await _remote.createListing(body);
+      final item = ListingModel.fromJson(data);
       if (isLocalDatabaseSupported) {
         final db = await AppDatabase.instance();
         await db.insert(
@@ -184,19 +167,19 @@ class ListingsRepository {
     }
   }
 
+  @override
   Future<void> delete(String id) async {
-    await _dio.delete('${ApiConstants.listings}/$id');
+    await _remote.deleteListing(id);
     if (isLocalDatabaseSupported) {
       await _invalidator.onListingDeleted(id);
     }
   }
 
+  @override
   Future<ListingModel> update(String id, Map<String, dynamic> body) async {
     try {
-      final res = await _dio.patch('${ApiConstants.listings}/$id', data: body);
-      final item = ListingModel.fromJson(
-        res.data['data'] as Map<String, dynamic>,
-      );
+      final data = await _remote.updateListing(id, body);
+      final item = ListingModel.fromJson(data);
       if (isLocalDatabaseSupported) {
         final db = await AppDatabase.instance();
         await db.insert(

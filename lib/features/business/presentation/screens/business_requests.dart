@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:tapella/core/models/booking_model.dart';
+import 'package:tapella/features/bookings/domain/entities/booking_entity.dart';
 import 'package:tapella/core/theme/app_colors.dart';
 import 'package:tapella/core/theme/app_text_styles.dart';
 import 'package:tapella/features/bookings/presentation/providers/bookings_provider.dart';
@@ -138,8 +138,8 @@ class BusinessRequests extends ConsumerWidget {
   Widget _buildIncomingList(
     BuildContext context,
     WidgetRef ref,
-    List<BookingModel> incoming,
-    List<BookingModel> accepted,
+    List<BookingEntity> incoming,
+    List<BookingEntity> accepted,
   ) {
     final allActive = [...incoming, ...accepted];
     if (allActive.isEmpty) {
@@ -276,7 +276,7 @@ class BusinessRequests extends ConsumerWidget {
   Widget _buildPastJobsList(
     BuildContext context,
     WidgetRef ref,
-    List<BookingModel> past,
+    List<BookingEntity> past,
   ) {
     if (past.isEmpty) {
       return const Center(

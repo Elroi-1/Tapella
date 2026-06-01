@@ -5,28 +5,29 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/exceptions/api_exception.dart';
 import '../../../core/models/user_model.dart';
-import '../../../core/network/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../domain/repositories/auth_repository.dart';
+import 'datasources/remote/auth_remote_datasource.dart';
 
 part 'auth_repository.g.dart';
 
-// Use standard camelCase for the function name so it generates cleanly
 @riverpod
 AuthRepository authRepository(Ref ref) {
   return AuthRepository(
-    ref.watch(dioProvider),
+    AuthRemoteDataSource(ref.watch(dioProvider)),
     ref.watch(secureStorageProvider),
   );
 }
 
-class AuthRepository {
+class AuthRepository implements AuthRepositoryContract {
   static const _userCacheKey = 'cached_user_json';
 
-  final Dio _dio;
+  final AuthRemoteDataSource _remote;
   final FlutterSecureStorage _storage;
 
-  AuthRepository(this._dio, this._storage);
+  AuthRepository(this._remote, this._storage);
 
+  @override
   Future<UserModel> register({
     required String email,
     required String password,
@@ -35,21 +36,16 @@ class AuthRepository {
     String? phone,
     String? profession,
   }) async {
-    final path = isProvider
-        ? ApiConstants.authRegisterProvider
-        : ApiConstants.authRegisterCustomer;
     try {
-      final res = await _dio.post(
-        path,
-        data: {
-          'email': email,
-          'password': password,
-          'displayName': displayName,
-          'phone': ?phone,
-          'profession': ?profession,
-        },
+      final data = await _remote.register(
+        email: email,
+        password: password,
+        displayName: displayName,
+        isProvider: isProvider,
+        phone: phone,
+        profession: profession,
       );
-      return _persistSession(res.data['data'] as Map<String, dynamic>);
+      return _persistSession(data);
     } on DioException catch (e) {
       throw ApiExceptionMapper.fromDio(e);
     } catch (e) {
@@ -60,20 +56,19 @@ class AuthRepository {
     }
   }
 
+  @override
   Future<UserModel> login({
     required String email,
     required String password,
     required bool isProvider,
   }) async {
-    final path = isProvider
-        ? ApiConstants.authLoginProvider
-        : ApiConstants.authLoginCustomer;
     try {
-      final res = await _dio.post(
-        path,
-        data: {'email': email, 'password': password},
+      final data = await _remote.login(
+        email: email,
+        password: password,
+        isProvider: isProvider,
       );
-      return _persistSession(res.data['data'] as Map<String, dynamic>);
+      return _persistSession(data);
     } on DioException catch (e) {
       throw ApiExceptionMapper.fromDio(e);
     } catch (e) {
@@ -84,15 +79,14 @@ class AuthRepository {
     }
   }
 
+  @override
   Future<UserModel?> restoreSession() async {
     try {
       final token = await _storage.read(key: 'access_token');
       if (token == null || token.isEmpty) return null;
       try {
-        final res = await _dio.get(ApiConstants.authMe);
-        final user = UserModel.fromJson(
-          res.data['data'] as Map<String, dynamic>,
-        );
+        final data = await _remote.fetchProfile();
+        final user = UserModel.fromJson(data);
 
         await _cacheUser(user);
         return user;
@@ -110,6 +104,7 @@ class AuthRepository {
     return UserModel.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
+  @override
   Future<void> logout() async {
     await _storage.deleteAll();
   }
@@ -133,7 +128,6 @@ class AuthRepository {
   }
 
   Future<void> _cacheUser(UserModel user) async {
-    await _storage.write(key: _userCacheKey, value: jsonEncode(user.toJson()));
     await _storage.write(key: _userCacheKey, value: jsonEncode(user.toJson()));
   }
 }

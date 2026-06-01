@@ -1,14 +1,49 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/exceptions/api_exception.dart';
-import '../../../../core/models/user_model.dart';
+import '../../domain/entities/user_entity.dart';
+import '../../domain/usecases/auth_usecases.dart';
 import '../../data/auth_repository.dart';
 import '../../../profile/data/profile_repository.dart';
 
-// 1. Crucial part directive for Riverpod 3 code generation
 part 'auth_provider.g.dart';
 
+@riverpod
+RegisterUseCase registerUseCase(Ref ref) {
+  return RegisterUseCase(ref.watch(authRepositoryProvider));
+}
+
+@riverpod
+LoginUseCase loginUseCase(Ref ref) {
+  return LoginUseCase(ref.watch(authRepositoryProvider));
+}
+
+@riverpod
+RestoreSessionUseCase restoreSessionUseCase(Ref ref) {
+  return RestoreSessionUseCase(ref.watch(authRepositoryProvider));
+}
+
+@riverpod
+LogoutUseCase logoutUseCase(Ref ref) {
+  return LogoutUseCase(ref.watch(authRepositoryProvider));
+}
+
+@riverpod
+FetchProfileUseCase fetchProfileUseCase(Ref ref) {
+  return FetchProfileUseCase(ref.watch(profileRepositoryProvider));
+}
+
+@riverpod
+UpdateProfileUseCase updateProfileUseCase(Ref ref) {
+  return UpdateProfileUseCase(ref.watch(profileRepositoryProvider));
+}
+
+@riverpod
+DeleteAccountUseCase deleteAccountUseCase(Ref ref) {
+  return DeleteAccountUseCase(ref.watch(profileRepositoryProvider));
+}
+
 class AuthState {
-  final UserModel? user;
+  final UserEntity? user;
   final bool isSubmitting;
   final String? error;
   final bool initialized;
@@ -23,7 +58,7 @@ class AuthState {
   bool get isAuthenticated => user != null;
 
   AuthState copyWith({
-    UserModel? user,
+    UserEntity? user,
     bool? isSubmitting,
     String? error,
     bool? initialized,
@@ -39,13 +74,10 @@ class AuthState {
   }
 }
 
-// 2. Annotate your class with @riverpod.
-// The generator automatically creates the 'authProvider' variable for you.
 @riverpod
 class Auth extends _$Auth {
   @override
   AuthState build() {
-    // Keeps your synchronous instant startup state while triggering the background async restore
     Future.microtask(_restore);
     return const AuthState();
   }
@@ -53,11 +85,13 @@ class Auth extends _$Auth {
   Future<void> _restore() async {
     try {
       final user = await ref
-          .read(authRepositoryProvider)
-          .restoreSession()
+          .read(restoreSessionUseCaseProvider)
+          .call()
           .timeout(const Duration(seconds: 8));
+      if (!ref.mounted) return;
       state = AuthState(user: user, initialized: true);
     } catch (_) {
+      if (!ref.mounted) return;
       state = const AuthState(initialized: true);
     }
   }
@@ -70,8 +104,8 @@ class Auth extends _$Auth {
     state = state.copyWith(isSubmitting: true, clearError: true);
     try {
       final user = await ref
-          .read(authRepositoryProvider)
-          .login(email: email, password: password, isProvider: isProvider);
+          .read(loginUseCaseProvider)
+          .call(email: email, password: password, isProvider: isProvider);
       state = AuthState(user: user, initialized: true);
       return true;
     } catch (e) {
@@ -95,8 +129,8 @@ class Auth extends _$Auth {
     state = state.copyWith(isSubmitting: true, clearError: true);
     try {
       final user = await ref
-          .read(authRepositoryProvider)
-          .register(
+          .read(registerUseCaseProvider)
+          .call(
             email: email,
             password: password,
             displayName: displayName,
@@ -122,25 +156,55 @@ class Auth extends _$Auth {
   }
 
   Future<void> logout() async {
-    await ref.read(authRepositoryProvider).logout();
+    await ref.read(logoutUseCaseProvider).call();
     state = const AuthState(initialized: true);
   }
 
-  void setUser(UserModel user) {
+  void setUser(UserEntity user) {
     state = AuthState(user: user, initialized: true);
   }
 
-  Future<void> refreshProfile() async {
+  Future<UserEntity?> refreshProfile() async {
     try {
-      final user = await ref.read(profileRepositoryProvider).fetchProfile();
+      final user = await ref.read(fetchProfileUseCaseProvider).call();
       state = AuthState(user: user, initialized: true);
-    } catch (_) {}
+      return user;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<UserEntity?> updateProfile({
+    required String displayName,
+    required String email,
+    String? phone,
+    String? location,
+    String? bio,
+    String? profileImage,
+    String? profession,
+  }) async {
+    try {
+      final user = await ref.read(updateProfileUseCaseProvider).call(
+            displayName: displayName,
+            email: email,
+            phone: phone,
+            location: location,
+            bio: bio,
+            profileImage: profileImage,
+            profession: profession,
+          );
+      state = AuthState(user: user, initialized: true);
+      return user;
+    } catch (e) {
+      state = state.copyWith(error: _message(e));
+      return null;
+    }
   }
 
   Future<bool> deleteAccount() async {
     try {
-      await ref.read(profileRepositoryProvider).deleteAccount();
-      await ref.read(authRepositoryProvider).logout();
+      await ref.read(deleteAccountUseCaseProvider).call();
+      await ref.read(logoutUseCaseProvider).call();
       state = const AuthState(initialized: true);
       return true;
     } catch (e) {

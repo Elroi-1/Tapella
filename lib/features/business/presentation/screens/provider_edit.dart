@@ -13,7 +13,6 @@ import 'package:tapella/core/widgets/red_button.dart';
 import 'package:tapella/core/widgets/text_field.dart';
 import 'package:tapella/core/models/listing_model.dart';
 import 'package:tapella/features/auth/presentation/providers/auth_provider.dart';
-import 'package:tapella/features/profile/data/profile_repository.dart';
 import 'package:tapella/features/profile/presentation/widgets/account_actions.dart';
 
 class ProviderEditScreen extends ConsumerStatefulWidget {
@@ -52,24 +51,21 @@ class _ProviderEditScreenState extends ConsumerState<ProviderEditScreen> {
     }
 
     Future.microtask(() async {
-      try {
-        final fresh = await ref.read(profileRepositoryProvider).fetchProfile();
-        if (mounted) {
-          _name.text = fresh.displayName;
-          _email.text = fresh.email;
-          _phone.text = fresh.phone ?? '';
-          _location.text = fresh.location ?? '';
-          _bio.text = fresh.bio ?? '';
-          final freshProfession = fresh.profession;
-          if (appCategories.contains(freshProfession)) {
-            _selectedProfession = freshProfession;
-          } else {
-            _selectedProfession = appCategories.first;
-          }
-          setState(() => _profileImage = fresh.profileImage);
-          ref.read(authProvider.notifier).setUser(fresh);
+      final fresh = await ref.read(authProvider.notifier).refreshProfile();
+      if (mounted && fresh != null) {
+        _name.text = fresh.displayName;
+        _email.text = fresh.email;
+        _phone.text = fresh.phone ?? '';
+        _location.text = fresh.location ?? '';
+        _bio.text = fresh.bio ?? '';
+        final freshProfession = fresh.profession;
+        if (appCategories.contains(freshProfession)) {
+          _selectedProfession = freshProfession;
+        } else {
+          _selectedProfession = appCategories.first;
         }
-      } catch (_) {}
+        setState(() => _profileImage = fresh.profileImage);
+      }
     });
   }
 
@@ -91,9 +87,7 @@ class _ProviderEditScreenState extends ConsumerState<ProviderEditScreen> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      final user = await ref
-          .read(profileRepositoryProvider)
-          .updateProfile(
+      final user = await ref.read(authProvider.notifier).updateProfile(
             displayName: _name.text.trim(),
             email: _email.text.trim(),
             phone: _phone.text.trim(),
@@ -102,7 +96,7 @@ class _ProviderEditScreenState extends ConsumerState<ProviderEditScreen> {
             profileImage: _profileImage,
             profession: _selectedProfession,
           );
-      ref.read(authProvider.notifier).setUser(user);
+      if (user == null) return;
       if (mounted) {
         ScaffoldMessenger.of(
           context,

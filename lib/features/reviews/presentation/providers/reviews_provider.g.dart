@@ -9,19 +9,116 @@ part of 'reviews_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(getReviewsByListingUseCase)
+const getReviewsByListingUseCaseProvider =
+    GetReviewsByListingUseCaseProvider._();
+
+final class GetReviewsByListingUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetReviewsByListingUseCase,
+          GetReviewsByListingUseCase,
+          GetReviewsByListingUseCase
+        >
+    with $Provider<GetReviewsByListingUseCase> {
+  const GetReviewsByListingUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getReviewsByListingUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getReviewsByListingUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetReviewsByListingUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetReviewsByListingUseCase create(Ref ref) {
+    return getReviewsByListingUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetReviewsByListingUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetReviewsByListingUseCase>(value),
+    );
+  }
+}
+
+String _$getReviewsByListingUseCaseHash() =>
+    r'666e0bdadbdbbfba90f2eb17987965b18a4600de';
+
+@ProviderFor(submitReviewUseCase)
+const submitReviewUseCaseProvider = SubmitReviewUseCaseProvider._();
+
+final class SubmitReviewUseCaseProvider
+    extends
+        $FunctionalProvider<
+          SubmitReviewUseCase,
+          SubmitReviewUseCase,
+          SubmitReviewUseCase
+        >
+    with $Provider<SubmitReviewUseCase> {
+  const SubmitReviewUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'submitReviewUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$submitReviewUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<SubmitReviewUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SubmitReviewUseCase create(Ref ref) {
+    return submitReviewUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SubmitReviewUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SubmitReviewUseCase>(value),
+    );
+  }
+}
+
+String _$submitReviewUseCaseHash() =>
+    r'a5a635a4778b5e98fbf732ccff3a7876d2da6f76';
+
 @ProviderFor(listingReviews)
 const listingReviewsProvider = ListingReviewsFamily._();
 
 final class ListingReviewsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<ReviewModel>>,
-          List<ReviewModel>,
-          FutureOr<List<ReviewModel>>
+          AsyncValue<List<ReviewEntity>>,
+          List<ReviewEntity>,
+          FutureOr<List<ReviewEntity>>
         >
     with
-        $FutureModifier<List<ReviewModel>>,
-        $FutureProvider<List<ReviewModel>> {
+        $FutureModifier<List<ReviewEntity>>,
+        $FutureProvider<List<ReviewEntity>> {
   const ListingReviewsProvider._({
     required ListingReviewsFamily super.from,
     required String super.argument,
@@ -45,12 +142,12 @@ final class ListingReviewsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<ReviewModel>> $createElement(
+  $FutureProviderElement<List<ReviewEntity>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<ReviewModel>> create(Ref ref) {
+  FutureOr<List<ReviewEntity>> create(Ref ref) {
     final argument = this.argument as String;
     return listingReviews(ref, argument);
   }
@@ -66,10 +163,10 @@ final class ListingReviewsProvider
   }
 }
 
-String _$listingReviewsHash() => r'c86e4a7c43c5c6bbd699b749c54483f1d990f977';
+String _$listingReviewsHash() => r'0d1a9b012eb8eda3c9b64dea82a3e26e1790ed43';
 
 final class ListingReviewsFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<ReviewModel>>, String> {
+    with $FunctionalFamilyOverride<FutureOr<List<ReviewEntity>>, String> {
   const ListingReviewsFamily._()
     : super(
         retry: null,

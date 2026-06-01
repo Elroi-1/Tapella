@@ -2,30 +2,32 @@ import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/exceptions/api_exception.dart';
 import '../../../core/models/user_model.dart';
-import '../../../core/network/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../../auth/domain/repositories/profile_repository.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../auth/data/datasources/remote/auth_remote_datasource.dart';
 
 part 'profile_repository.g.dart';
 
 @riverpod
 ProfileRepository profileRepository(Ref ref) {
   return ProfileRepository(
-    ref.watch(dioProvider),
+    AuthRemoteDataSource(ref.watch(dioProvider)),
     ref.watch(authRepositoryProvider),
   );
 }
 
-class ProfileRepository {
-  final Dio _dio;
+class ProfileRepository implements ProfileRepositoryContract {
+  final AuthRemoteDataSource _remote;
   final AuthRepository _authRepo;
 
-  ProfileRepository(this._dio, this._authRepo);
+  ProfileRepository(this._remote, this._authRepo);
 
+  @override
   Future<UserModel> fetchProfile() async {
     try {
-      final res = await _dio.get(ApiConstants.authMe);
-      final user = UserModel.fromJson(res.data['data'] as Map<String, dynamic>);
+      final data = await _remote.fetchProfile();
+      final user = UserModel.fromJson(data);
       await _authRepo.updateCachedUser(user);
       return user;
     } on DioException catch (e) {
@@ -33,6 +35,7 @@ class ProfileRepository {
     }
   }
 
+  @override
   Future<UserModel> updateProfile({
     required String displayName,
     required String email,
@@ -43,19 +46,16 @@ class ProfileRepository {
     String? profession,
   }) async {
     try {
-      final res = await _dio.patch(
-        ApiConstants.authProfile,
-        data: {
-          'displayName': displayName,
-          'email': email,
-          'phone': ?phone,
-          'location': ?location,
-          'bio': ?bio,
-          'profileImage': ?profileImage,
-          'profession': ?profession,
-        },
+      final data = await _remote.updateProfile(
+        displayName: displayName,
+        email: email,
+        phone: phone,
+        location: location,
+        bio: bio,
+        profileImage: profileImage,
+        profession: profession,
       );
-      final user = UserModel.fromJson(res.data['data'] as Map<String, dynamic>);
+      final user = UserModel.fromJson(data);
       await _authRepo.updateCachedUser(user);
       return user;
     } on DioException catch (e) {
@@ -63,9 +63,10 @@ class ProfileRepository {
     }
   }
 
+  @override
   Future<void> deleteAccount() async {
     try {
-      await _dio.delete(ApiConstants.authDeleteAccount);
+      await _remote.deleteAccount();
     } on DioException catch (e) {
       throw ApiExceptionMapper.fromDio(e);
     }

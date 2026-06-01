@@ -23,6 +23,14 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
   bool _saving = false;
   bool _initialized = false;
 
+  void _handleBack() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go('/business/profile');
+  }
+
   @override
   void dispose() {
     serviceTitleController.dispose();
@@ -86,9 +94,54 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
     return AppScaffold(
       extendBody: true,
       appBar: CustomAppBar(
-        onMenuPressed: () => context.pop(),
+        onMenuPressed: _handleBack,
         leading: const Icon(Icons.arrow_back, color: Color(0xFFADC6FF)),
         title: 'Edit Service',
+        actions: [
+          IconButton(
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Delete Listing'),
+                  content: const Text(
+                    'Are you sure you want to delete this listing? This action cannot be undone.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                try {
+                  await ref
+                      .read(deleteListingUseCaseProvider)
+                      .call(widget.listingId);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Listing deleted')),
+                    );
+                    context.go('/business/profile');
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(e.toString())));
+                  }
+                }
+              }
+            },
+            icon: Icon(Icons.delete_outline_sharp),
+          ),
+        ],
       ),
       body: listingAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

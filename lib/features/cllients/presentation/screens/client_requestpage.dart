@@ -87,9 +87,12 @@ class _ClientRequestpageState extends ConsumerState<ClientRequestpage> {
                 ),
               ),
               const SizedBox(height: 16),
-              TabSelector(
-                selectedTab: selectedTab,
-                onTabChanged: (tab) => setState(() => selectedTab = tab),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: TabSelector(
+                  selectedTab: selectedTab,
+                  onTabChanged: (tab) => setState(() => selectedTab = tab),
+                ),
               ),
               const SizedBox(height: 16),
               Expanded(

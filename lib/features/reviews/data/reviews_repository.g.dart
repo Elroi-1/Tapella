@@ -54,4 +54,4 @@ final class ReviewsRepositoryProvider
   }
 }
 
-String _$reviewsRepositoryHash() => r'658c4e4c466de2a25cfd6e377e541c868e77ac6c';
+String _$reviewsRepositoryHash() => r'f6456133943ad5d78cf852fbb53869403d93cf8c';
