@@ -2,9 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tapella/features/bookings/presentation/providers/bookings_provider.dart';
 
-import '../../../../helpers/fake_repositories.dart';
-import '../../../../helpers/fixtures.dart';
-import '../../../../helpers/riverpod_test_helpers.dart';
+import '../../../helpers/fake_repositories.dart';
+import '../../../helpers/fixtures.dart';
+import '../../../helpers/riverpod_test_helpers.dart';
 
 void main() {
   late FakeBookingsRepository bookingsRepository;
@@ -25,8 +25,7 @@ void main() {
     test('customerBookings returns bookings from use case', () async {
       bookingsRepository.customerBookingsResult = Fixtures.bookingsResult();
 
-      final bookings =
-          await container.read(customerBookingsProvider.future);
+      final bookings = await container.read(customerBookingsProvider.future);
 
       expect(bookings, [Fixtures.booking]);
     });
@@ -34,8 +33,7 @@ void main() {
     test('incomingBookings returns bookings from use case', () async {
       bookingsRepository.incomingBookingsResult = Fixtures.bookingsResult();
 
-      final bookings =
-          await container.read(incomingBookingsProvider.future);
+      final bookings = await container.read(incomingBookingsProvider.future);
 
       expect(bookings, [Fixtures.booking]);
     });
@@ -45,7 +43,9 @@ void main() {
     test('book creates booking through use case', () async {
       bookingsRepository.createResult = Fixtures.booking;
 
-      final booking = await container.read(bookingActionsProvider).book(
+      final booking = await container
+          .read(bookingActionsProvider)
+          .book(
             listingId: 'listing-1',
             scheduledDate: '2026-06-10',
             notes: 'Please call first',

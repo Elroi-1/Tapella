@@ -3,9 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tapella/core/exceptions/api_exception.dart';
 import 'package:tapella/features/auth/presentation/providers/auth_provider.dart';
 
-import '../../../../helpers/fake_repositories.dart';
-import '../../../../helpers/fixtures.dart';
-import '../../../../helpers/riverpod_test_helpers.dart';
+import '../../../helpers/fake_repositories.dart';
+import '../../../helpers/fixtures.dart';
+import '../../../helpers/riverpod_test_helpers.dart';
 
 void main() {
   late FakeAuthRepository authRepository;
@@ -26,17 +26,20 @@ void main() {
   });
 
   group('Auth provider', () {
-    test('initializes with no user when session restore returns null', () async {
-      authRepository.restoreSessionResult = null;
+    test(
+      'initializes with no user when session restore returns null',
+      () async {
+        authRepository.restoreSessionResult = null;
 
-      container.read(authProvider);
-      await waitForAuthInitialized(container);
+        container.read(authProvider);
+        await waitForAuthInitialized(container);
 
-      final state = container.read(authProvider);
-      expect(state.initialized, isTrue);
-      expect(state.isAuthenticated, isFalse);
-      expect(state.user, isNull);
-    });
+        final state = container.read(authProvider);
+        expect(state.initialized, isTrue);
+        expect(state.isAuthenticated, isFalse);
+        expect(state.user, isNull);
+      },
+    );
 
     test('restores existing session on startup', () async {
       authRepository.restoreSessionResult = Fixtures.customer;
@@ -56,7 +59,9 @@ void main() {
       container.read(authProvider);
       await waitForAuthInitialized(container);
 
-      final success = await container.read(authProvider.notifier).login(
+      final success = await container
+          .read(authProvider.notifier)
+          .login(
             email: 'customer@tapella.test',
             password: 'secret',
             isProvider: false,
@@ -79,7 +84,9 @@ void main() {
       container.read(authProvider);
       await waitForAuthInitialized(container);
 
-      final success = await container.read(authProvider.notifier).login(
+      final success = await container
+          .read(authProvider.notifier)
+          .login(
             email: 'bad@tapella.test',
             password: 'wrong',
             isProvider: false,
@@ -112,7 +119,9 @@ void main() {
       container.read(authProvider);
       await waitForAuthInitialized(container);
 
-      final updated = await container.read(authProvider.notifier).updateProfile(
+      final updated = await container
+          .read(authProvider.notifier)
+          .updateProfile(
             displayName: 'Updated Name',
             email: Fixtures.customer.email,
           );
@@ -127,8 +136,9 @@ void main() {
       container.read(authProvider);
       await waitForAuthInitialized(container);
 
-      final success =
-          await container.read(authProvider.notifier).deleteAccount();
+      final success = await container
+          .read(authProvider.notifier)
+          .deleteAccount();
 
       expect(success, isTrue);
       expect(profileRepository.deleteAccountCalled, isTrue);

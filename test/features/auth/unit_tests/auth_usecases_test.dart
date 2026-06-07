@@ -3,8 +3,8 @@ import 'package:tapella/core/exceptions/api_exception.dart';
 import 'package:tapella/features/auth/domain/entities/user_entity.dart';
 import 'package:tapella/features/auth/domain/usecases/auth_usecases.dart';
 
-import '../../../../helpers/fake_repositories.dart';
-import '../../../../helpers/fixtures.dart';
+import '../../../helpers/fake_repositories.dart';
+import '../../../helpers/fixtures.dart';
 
 void main() {
   late FakeAuthRepository authRepository;

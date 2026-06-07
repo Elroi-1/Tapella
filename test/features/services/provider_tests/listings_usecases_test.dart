@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tapella/features/services/domain/usecases/listings_usecases.dart';
 
-import '../../../../helpers/fake_repositories.dart';
-import '../../../../helpers/fixtures.dart';
+import '../../../helpers/fake_repositories.dart';
+import '../../../helpers/fixtures.dart';
 
 void main() {
   late FakeListingsRepository repository;
