@@ -132,22 +132,63 @@ async function deleteAccount(userId) {
   });
   if (!user) throw new AppError('User not found', 404, 'NOT_FOUND');
 
-  await prisma.$transaction([
-    prisma.review.deleteMany({
-      where: { OR: [{ customerId: userId }, { providerId: userId }] }
-    }),
-    prisma.booking.deleteMany({
-      where: { OR: [{ customerId: userId }, { providerId: userId }] }
-    }),
-    prisma.listing.updateMany({
+  await prisma.$transaction(async (tx) => {
+    const ownListings = await tx.listing.findMany({
       where: { providerId: userId },
-      data: { deletedAt: new Date() }
-    }),
-    prisma.user.delete({
-      where: { id: userId }
-    })
-  ]);
-  
+      select: { id: true },
+    });
+    const ownListingIds = ownListings.map((l) => l.id);
+
+    const affectedReviews = await tx.review.findMany({
+      where: {
+        customerId: userId,
+        listingId: ownListingIds.length > 0 ? { notIn: ownListingIds } : undefined,
+      },
+      select: { listingId: true },
+      distinct: ['listingId'],
+    });
+
+    await tx.review.deleteMany({
+      where: {
+        OR: [
+          { customerId: userId },
+          { providerId: userId },
+          ...(ownListingIds.length > 0 ? [{ listingId: { in: ownListingIds } }] : []),
+        ],
+      },
+    });
+    await tx.booking.deleteMany({
+      where: {
+        OR: [
+          { customerId: userId },
+          { providerId: userId },
+          ...(ownListingIds.length > 0 ? [{ listingId: { in: ownListingIds } }] : []),
+        ],
+      },
+    });
+    await tx.listing.deleteMany({
+      where: { providerId: userId },
+    });
+    await tx.user.delete({
+      where: { id: userId },
+    });
+
+    for (const { listingId } of affectedReviews) {
+      const aggregates = await tx.review.aggregate({
+        where: { listingId },
+        _avg: { rating: true },
+        _count: { _all: true },
+      });
+      await tx.listing.update({
+        where: { id: listingId },
+        data: {
+          ratingAvg: aggregates._avg.rating || 0,
+          reviewCount: aggregates._count._all || 0,
+        },
+      });
+    }
+  });
+
   return { deleted: true };
 }
 

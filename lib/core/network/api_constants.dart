@@ -5,13 +5,13 @@ class ApiConstants {
   /// API base URL for the current platform.
   static String get baseUrl {
     if (kIsWeb) {
-      return 'http://localhost:4000/api/v1';
+      return 'http://localhost:3000/api/v1';
     }
     if (defaultTargetPlatform == TargetPlatform.android) {
       // Android emulator → host machine
-      return 'http://10.0.2.2:4000/api/v1';
+      return 'http://10.0.2.2:3000/api/v1';
     }
-    return 'http://localhost:4000/api/v1';
+    return 'http://localhost:3000/api/v1';
   }
 
   static const authRegisterCustomer = '/auth/register/customer';

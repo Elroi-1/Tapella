@@ -32,9 +32,9 @@ async function listPublic({ search, category }) {
 
   if (search) {
     where.OR = [
-      { title: { contains: search } },
-      { description: { contains: search } },
-      { location: { contains: search } },
+      { title: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+      { location: { contains: search, mode: "insensitive" } },
     ];
   }
 
@@ -133,8 +133,13 @@ async function update(id, body) {
 }
 
 async function remove(id) {
-  await prisma.listing.delete({
+  const existing = await prisma.listing.findUnique({ where: { id } });
+  if (!existing || existing.deletedAt) {
+    throw new AppError("Listing not found", 404, "NOT_FOUND");
+  }
+  await prisma.listing.update({
     where: { id },
+    data: { deletedAt: new Date() },
   });
   return { deleted: true };
 }

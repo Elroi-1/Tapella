@@ -120,8 +120,8 @@ async function updateStatus(bookingId, providerId, newStatus, additionalData = {
     data: { status: newStatus, ...additionalData },
     include: {
       listing: { select: { title: true } },
-      customer: { select: { displayName: true } },
-      provider: { select: { displayName: true } }
+      customer: { select: { displayName: true, profileImage: true } },
+      provider: { select: { displayName: true, profileImage: true } }
     }
   });
 
@@ -129,7 +129,14 @@ async function updateStatus(bookingId, providerId, newStatus, additionalData = {
 }
 
 async function complete(bookingId, providerId, amountEtb) {
-  const data = amountEtb ? { amountEtb: parseFloat(amountEtb) } : {};
+  let data = {};
+  if (amountEtb !== undefined && amountEtb !== null && amountEtb !== '') {
+    const parsedAmount = Number(amountEtb);
+    if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
+      throw new AppError('amountEtb must be a non-negative number', 400, 'VALIDATION_ERROR');
+    }
+    data = { amountEtb: parsedAmount };
+  }
   return updateStatus(bookingId, providerId, 'completed', data);
 }
 
@@ -151,8 +158,8 @@ async function cancelByCustomer(bookingId, customerId) {
     data: { status: 'cancelled' },
     include: {
       listing: { select: { title: true } },
-      customer: { select: { displayName: true } },
-      provider: { select: { displayName: true } }
+      customer: { select: { displayName: true, profileImage: true } },
+      provider: { select: { displayName: true, profileImage: true } }
     }
   });
 

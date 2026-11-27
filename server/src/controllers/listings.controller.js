@@ -31,12 +31,29 @@ async function listMine(req, res, next) {
   }
 }
 
+function validatePrice(priceEtb) {
+  if (priceEtb === undefined || priceEtb === null) return undefined;
+  const parsed = Number(priceEtb);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new AppError('priceEtb must be a non-negative number', 400, 'VALIDATION_ERROR');
+  }
+  return parsed;
+}
+
 async function create(req, res, next) {
   try {
-    if (!req.body.title || !req.body.category) {
+    const title = typeof req.body.title === 'string' ? req.body.title.trim() : '';
+    const category = typeof req.body.category === 'string' ? req.body.category.trim() : '';
+    if (!title || !category) {
       throw new AppError('Title and category required', 400, 'VALIDATION_ERROR');
     }
-    const data = await listingsService.create(req.user.id, req.body);
+    const priceEtb = validatePrice(req.body.priceEtb);
+    const data = await listingsService.create(req.user.id, {
+      ...req.body,
+      title,
+      category,
+      ...(priceEtb !== undefined ? { priceEtb } : {}),
+    });
     res.status(201).json({ success: true, data });
   } catch (e) {
     next(e);
@@ -45,7 +62,11 @@ async function create(req, res, next) {
 
 async function update(req, res, next) {
   try {
-    const data = await listingsService.update(req.params.id, req.body);
+    const priceEtb = validatePrice(req.body.priceEtb);
+    const data = await listingsService.update(req.params.id, {
+      ...req.body,
+      ...(priceEtb !== undefined ? { priceEtb } : {}),
+    });
     res.json({ success: true, data });
   } catch (e) {
     next(e);

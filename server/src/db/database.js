@@ -10,10 +10,12 @@ const pool = new Pool({ connectionString: dbUrl });
 const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
 function syncSchema() {
-  const prismaBin = path.resolve(__dirname, '..', '..', 'node_modules', '.bin', 'prisma');
+  const binName = process.platform === 'win32' ? 'prisma.cmd' : 'prisma';
+  const prismaBin = path.resolve(__dirname, '..', '..', 'node_modules', '.bin', binName);
   execFileSync(prismaBin, ['db', 'push'], {
     stdio: 'inherit',
     env: process.env,
+    shell: process.platform === 'win32',
   });
 }
 
@@ -28,10 +30,4 @@ async function initDatabase() {
   }
 }
 
-// For backward compatibility during migration
-function run() { throw new Error('Use prisma client instead of db.run'); }
-function get() { throw new Error('Use prisma client instead of db.get'); }
-function all() { throw new Error('Use prisma client instead of db.all'); }
-function persist() { /* No-op with Prisma */ }
-
-module.exports = { initDatabase, prisma, run, get, all, persist };
+module.exports = { initDatabase, prisma };
