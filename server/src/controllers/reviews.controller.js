@@ -4,10 +4,20 @@ const { AppError } = require('../middleware/errorHandler');
 async function create(req, res, next) {
   try {
     const { rating, comment } = req.body;
-    if (!rating || rating < 1 || rating > 5) {
-      throw new AppError('Rating 1-5 required', 400, 'VALIDATION_ERROR');
+    const parsedRating = Number(rating);
+    if (
+      rating === undefined ||
+      rating === null ||
+      !Number.isInteger(parsedRating) ||
+      parsedRating < 1 ||
+      parsedRating > 5
+    ) {
+      throw new AppError('Rating must be an integer between 1 and 5', 400, 'VALIDATION_ERROR');
     }
-    const data = await reviewsService.create(req.user.id, req.params.bookingId, { rating, comment });
+    const data = await reviewsService.create(req.user.id, req.params.bookingId, {
+      rating: parsedRating,
+      comment,
+    });
     res.status(201).json({ success: true, data });
   } catch (e) {
     next(e);
