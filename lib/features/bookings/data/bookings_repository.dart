@@ -59,15 +59,24 @@ class BookingsRepository implements BookingsRepositoryContract {
 
   @override
   Future<CacheResult<List<BookingModel>>> incomingBookings() async {
-    return _fetchList('${ApiConstants.bookings}/incoming');
+    return _fetchList(
+      '${ApiConstants.bookings}/incoming',
+      statuses: const ['pending'],
+    );
   }
 
   @override
   Future<CacheResult<List<BookingModel>>> historyBookings() async {
-    return _fetchList('${ApiConstants.bookings}/history');
+    return _fetchList(
+      '${ApiConstants.bookings}/history',
+      statuses: const ['accepted', 'completed', 'rejected', 'cancelled'],
+    );
   }
 
-  Future<CacheResult<List<BookingModel>>> _fetchList(String path) async {
+  Future<CacheResult<List<BookingModel>>> _fetchList(
+    String path, {
+    List<String>? statuses,
+  }) async {
     if (!isLocalDatabaseSupported) {
       try {
         final data = await _remote.fetchBookingsList(path);
@@ -76,12 +85,30 @@ class BookingsRepository implements BookingsRepositoryContract {
         throw ApiExceptionMapper.fromDio(e);
       }
     }
-    return _cacheFirst(path);
+    return _cacheFirst(path, statuses: statuses);
   }
 
-  Future<CacheResult<List<BookingModel>>> _cacheFirst(String path) async {
+  Future<List<Map<String, Object?>>> _queryCached(
+    Database db, {
+    List<String>? statuses,
+  }) async {
+    if (statuses == null || statuses.isEmpty) {
+      return db.query('bookings');
+    }
+    final placeholders = List.filled(statuses.length, '?').join(', ');
+    return db.query(
+      'bookings',
+      where: 'status IN ($placeholders)',
+      whereArgs: statuses,
+    );
+  }
+
+  Future<CacheResult<List<BookingModel>>> _cacheFirst(
+    String path, {
+    List<String>? statuses,
+  }) async {
     final db = await AppDatabase.instance();
-    final cached = await db.query('bookings');
+    final cached = await _queryCached(db, statuses: statuses);
     if (cached.isNotEmpty && !await _connectivity.isOnline) {
       return CacheResult(
         data: cached.map((r) => BookingModel.fromDb(r)).toList(),
@@ -91,21 +118,22 @@ class BookingsRepository implements BookingsRepositoryContract {
     try {
       final data = await _remote.fetchBookingsList(path);
       final list = _parseList(data);
-      await _saveAll(list);
+      await _saveAll(list, statuses: statuses);
       return CacheResult(data: list);
     } on DioException catch (e) {
-      return _offlineFallback(e);
+      return _offlineFallback(e, statuses: statuses);
     }
   }
 
   Future<CacheResult<List<BookingModel>>> _offlineFallback(
-    DioException e,
-  ) async {
+    DioException e, {
+    List<String>? statuses,
+  }) async {
     if (!isLocalDatabaseSupported) {
       throw ApiExceptionMapper.fromDio(e);
     }
     final db = await AppDatabase.instance();
-    final cached = await db.query('bookings');
+    final cached = await _queryCached(db, statuses: statuses);
     if (cached.isNotEmpty) {
       return CacheResult(
         data: cached.map((r) => BookingModel.fromDb(r)).toList(),
@@ -121,16 +149,31 @@ class BookingsRepository implements BookingsRepositoryContract {
         .toList();
   }
 
-  Future<void> _saveAll(List<BookingModel> list) async {
+  Future<void> _saveAll(
+    List<BookingModel> list, {
+    List<String>? statuses,
+  }) async {
     if (!isLocalDatabaseSupported) return;
     final db = await AppDatabase.instance();
-    for (final b in list) {
-      await db.insert(
-        'bookings',
-        b.toDbMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
+    await db.transaction((txn) async {
+      if (statuses == null || statuses.isEmpty) {
+        await txn.delete('bookings');
+      } else {
+        final placeholders = List.filled(statuses.length, '?').join(', ');
+        await txn.delete(
+          'bookings',
+          where: 'status IN ($placeholders)',
+          whereArgs: statuses,
+        );
+      }
+      for (final b in list) {
+        await txn.insert(
+          'bookings',
+          b.toDbMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
   }
 
   @override

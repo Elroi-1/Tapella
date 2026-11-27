@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../core/cache/cache_invalidator.dart';
 import '../../../core/exceptions/api_exception.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/network/dio_client.dart';
@@ -16,6 +17,7 @@ AuthRepository authRepository(Ref ref) {
   return AuthRepository(
     AuthRemoteDataSource(ref.watch(dioProvider)),
     ref.watch(secureStorageProvider),
+    ref.watch(cacheInvalidatorProvider),
   );
 }
 
@@ -24,8 +26,13 @@ class AuthRepository implements AuthRepositoryContract {
 
   final AuthRemoteDataSource _remote;
   final FlutterSecureStorage _storage;
+  final CacheInvalidator _cacheInvalidator;
 
-  AuthRepository(this._remote, this._storage);
+  AuthRepository(
+    this._remote,
+    this._storage, [
+    CacheInvalidator? cacheInvalidator,
+  ]) : _cacheInvalidator = cacheInvalidator ?? CacheInvalidator();
 
   @override
   Future<UserModel> register({
@@ -107,6 +114,7 @@ class AuthRepository implements AuthRepositoryContract {
   @override
   Future<void> logout() async {
     await _storage.deleteAll();
+    await _cacheInvalidator.invalidateAll();
   }
 
   Future<UserModel> _persistSession(Map<String, dynamic> data) async {
